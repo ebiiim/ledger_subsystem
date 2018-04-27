@@ -1,16 +1,13 @@
 include AUTHORS
-include INSTALL
 include LICENSE
-include LICENSE.python
 include MANIFEST.in
+include CONTRIBUTING.md
 include package.json
-include *.rst
-include prepare.sh
+include README.md
 include prepare.py
-recursive-include third_party/openssl *
-recursive-include bbc1/common/libbbcsig *
-recursive-include bbc1/common *
+include *.rst
 recursive-include bbc1/core/ethereum *
+recursive-include utils *
 graft django
 prune django/contrib/admin/bin
 graft docs

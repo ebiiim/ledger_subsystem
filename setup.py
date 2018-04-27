@@ -1,4 +1,5 @@
 import subprocess
+import sys, os, shutil, site
 from os import path
 from setuptools import setup
 from setuptools.command.install import install
@@ -11,16 +12,23 @@ with open('README.rst') as f:
 
 
 class MyInstall(install):
+    def _pre_install(self):
+        sitedir = site.getsitepackages()[0]
+        install_pkg_dir = os.path.join(sitedir, 'bbc1')
+        target_dir = os.path.join(install_pkg_dir, 'core')
+        ethereum_target_dir = os.path.join(target_dir, 'ethereum')
+        if os.path.exists(ethereum_target_dir):
+            shutil.rmtree(ethereum_target_dir)
+        shutil.copytree('bbc1/core/ethereum', ethereum_target_dir)
+
     def run(self):
         try:
-            subprocess.call(['/bin/sh', 'prepare.sh'], cwd=here)
-            subprocess.call(['python', 'prepare.py'], cwd=here)
+            self._pre_install()
+            install.run(self)
         except Exception as e:
             print(e)
             print("Error compiling openssl.")
             exit(1)
-        else:
-            install.run(self)
 
 
 bbc1_requires = [
@@ -30,20 +38,14 @@ bbc1_requires = [
                  'requests>=2.12.4',
                  'pytest>=3.0.5',
                  'gevent>=1.2.1',
-                 'populus',
                  'msgpack-python>=0.4.8',
-                 'populus==2.1.0',
-                 'eth-utils==0.7.4',
+                 'populus',
+                 'eth-utils',
                 ]
 
-bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum', 'bbc1.core.libbbcsig']
+bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
 
-bbc1_commands = [
-                 'bbc1/core/bbc_core.py',
-                 'utils/bbc_ping.py',
-                 'utils/bbc_system_conf.py',
-                 'utils/subsystem_tool.py',
-                 'examples/file_proof/file_proof.py']
+bbc1_commands = []
 
 bbc1_classifiers = [
                     'Development Status :: 4 - Beta',
@@ -52,8 +54,8 @@ bbc1_classifiers = [
                     'Topic :: Software Development']
 
 setup(
-    name='bbc1',
-    version='0.10.0',
+    name='ledger_subsystem',
+    version='0.0.1',
     description='A core system of Beyond Blockchain One',
     long_description=readme,
     url='https://github.com/beyond-blockchain/bbc1',
