@@ -32,15 +32,10 @@ class MyInstall(install):
 
 
 bbc1_requires = [
-                 'pyOpenSSL>=16.2.0',
-                 'jinja2==2.8.1',
-                 'Flask>=0.10.1',
-                 'requests>=2.12.4',
-                 'pytest>=3.0.5',
-                 'gevent>=1.2.1',
-                 'msgpack-python>=0.4.8',
-                 'populus',
-                 'eth-utils',
+                    'populus==2.1.0',
+                    'rlp==0.6.0',
+                    'eth-utils==0.7.4',
+                    'web3==3.16.5',
                 ]
 
 bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
