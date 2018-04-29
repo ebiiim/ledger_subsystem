@@ -33,6 +33,7 @@ class MyInstall(install):
 
 bbc1_requires = [
                     'populus==2.1.0',
+                    'rlp==0.6.0',
                     'eth-utils==0.7.4',
                     'web3==3.16.5',
                 ]
