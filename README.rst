@@ -4,9 +4,11 @@ Ledger Subsystem for BBc-1 (Beyond Blockchain One)
 Ledger Subsystem
 ----------------
 
-**ledger_subsystem.py** contains an abstraction of BBc-1 ledger
-subsystem that provides functionality for proof of existence of
-transactions in a BBc-1 domain.
+**ledger_subsystem.py** provides functionality for proof of existence of
+transactions in a BBc-1 domain, using existing blockchains. This
+functionality is intended for use prior to expansion of the BBc-1
+inter-domain network and widespread use of intercrossing references for
+proof of existence.
 
 The following methods are provided:
 
