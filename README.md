@@ -1,7 +1,7 @@
 Ledger Subsystem for BBc-1 (Beyond Blockchain One)
 ===========================================
 ## Ledger Subsystem
-**bbc1/core/ledger_subsystem.py** provides functionality for proof of existence of transactions in a BBc-1 domain, using existing blockchains. This functionality is intended for use prior to expansion of the BBc-1 inter-domain network and widespread use of intercrossing references for proof of existence.
+**bbc1/core/ledger_subsystem.py** provides functionality for proof of existence of transactions in BBc-1 domains, using existing blockchains. This functionality is intended for use prior to expansion of the BBc-1 inter-domain network and widespread use of intercrossing references for proof of existence.
 
 The following methods are provided:
 
@@ -21,4 +21,28 @@ The following methods are provided:
 **utils/eth_subsytem_tool.py** is the subsystem tool for the ledger subsystem with Ethereum. See README at **bbc1/core/ethereum** for detail instruction.
 
 ## How to Use This Module
-At this stage (pre-version 1.0), we are in the process of re-organizing the module structures as of version 0.10 of BBc-1 towards version 1.0. When this module is ready, this README will be updated.
+The following instructions assume that the command 'python' and 'pip' run python3 and pip3, respectively.
+
+### Product (or late-development stage)
+1. Install
+```
+$ pip install ledger-subsystem
+```
+or, during late-development stage,
+```
+$ python setup.py sdist
+$ pip install dist/leger_subsystem-<version>.tar.gz
+```
+2. Use a subsystem tool to set up and use the module.
+
+### Development
+1. Clone this to your environment, next to BBc-1 Core source code tree.
+2. Install requirements
+```
+$ pip install -r requirements.txt
+```
+3. Copy the source code tree of this module onto that of BBc-1 Core (do this everytime after modification).
+```
+$ python devmerge.py
+```
+4. Use a subsystem tool to set up and use the module.

@@ -14,12 +14,12 @@ Currently supports local geth chain only.
   * sets up Populus environment and geth Ethereum node. See usage below.
 
 ## Dependencies
-* populus 1.10.1 (note that rlp==0.5.1), 1.11.0-2.1.0 (rlp==0.6.0)
-* geth (go ethereum) 1.7.2-1.8.7
-* solc (solidity) 0.4.17-0.4.23
+* populus 1.10.1 (note that rlp==0.5.1), 1.11.0-2.1.0 (rlp==0.6.0) (pip-installed)
+* geth (go ethereum) 1.7.2-1.8.7 (install with apt or brew)
+* solc (solidity) 0.4.17-0.4.23 (install with apt or brew)
 
 ## How to use
-For the example below, we assume that BBc-1 Core and the ledger subsystem are install with pip, and bbc_core.py is running at the user's home directory.
+For the example below, we assume that BBc-1 Core and the ledger subsystem are pip-installed, and 'bbc_core.py' is running at the user's home directory (the "config.json" file resides under "~/.bbc1").
 
 1. Set up populus environment
 ```
