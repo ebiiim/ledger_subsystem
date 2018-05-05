@@ -11,11 +11,10 @@ import os
 import time
 
 import sys
-sys.path.append('.')
-sys.path.append('..')
+sys.path.extend(["../"])
+import bbc1
 from bbc1.core import bbclib
 from bbc1.core import ledger_subsystem, bbc_stats, bbc_network, bbc_config
-from bbc1.core.ethereum import setup
 from bbc1.core.ethereum import bbc_ethereum
 from tests import test_bbc_ethereum
 
@@ -44,7 +43,9 @@ class DummyCore:
 @pytest.fixture()
 def default_config():
 
-    config = setup.setup_config(test_bbc_ethereum.Args())
+    args = test_bbc_ethereum.Args()
+    config = bbc_ethereum.setup_config(args.workingdir, args.config,
+            args.networkid, args.gethport, args.log)
     conf = config.get_config()
 
     db_conf = {
@@ -94,15 +95,12 @@ def default_config():
 
 def test_ledger_subsystem(default_config):
 
-    setup.setup_run(default_config)
+    bbc_ethereum.setup_run(default_config)
 
     prevdir = os.getcwd()
-    dir = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(dir)
-    os.chdir('../bbc1/core/ethereum')
+    os.chdir(bbc1.__path__[0] + '/core/ethereum')
 
     conf = default_config.get_config()
-    print(conf)
     eth = bbc_ethereum.BBcEthereum(
         conf['ethereum']['account'],
         conf['ethereum']['passphrase'],
@@ -162,7 +160,7 @@ def test_ledger_subsystem(default_config):
     assert eth.verify(digest, j['subtree']) > 0
 
     os.chdir(prevdir)
-    setup.setup_stop(default_config)
+    bbc_ethereum.setup_stop(default_config)
 
 
 # end of tests/test_ledger_subsystem_.py

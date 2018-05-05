@@ -26,6 +26,12 @@ sys.path.extend(["../../"])
 from bbc1.core import logger
 from bbc1.core.ethereum import bbc_ethereum
 
+
+DEFAULT_SUBSYSTEM = 'ethereum'
+DEFAULT_CAPACITY = 4096
+DEFAULT_INTERVAL = 60 * 60
+
+
 temp_json = {
     "digest": None,
     "left": None,
@@ -99,6 +105,12 @@ class LedgerSubsystem:
             self.eth_config = \
                     None if 'ethereum' not in conf else conf['ethereum']
         self.eth = None
+        if 'ledger_subsystem' not in self.config:
+            self.config['ledger_subsystem'] = {
+                'subsystem': DEFAULT_SUBSYSTEM,
+                'max_transactions': DEFAULT_CAPACITY,
+                'max_seconds': DEFAULT_INTERVAL,
+            }
         self.capacity = self.config['ledger_subsystem']['max_transactions']
         self.interval = self.config['ledger_subsystem']['max_seconds']
         self.timer = None
@@ -171,12 +183,18 @@ class LedgerSubsystem:
         """
         if self.config['ledger_subsystem']['subsystem'] == 'ethereum':
             prevdir = os.getcwd()
+            if not os.path.exists('ethereum/contracts/BBcAnchor.sol'):
+                os.chdir(os.path.dirname(os.path.realpath(__file__)))
             os.chdir('ethereum')
-            self.eth = bbc_ethereum.BBcEthereum(
-                self.eth_config['account'],
-                self.eth_config['passphrase'],
-                self.eth_config['contract_address']
-            )
+            try:
+                self.eth = bbc_ethereum.BBcEthereum(
+                    self.eth_config['account'],
+                    self.eth_config['passphrase'],
+                    self.eth_config['contract_address']
+                )
+            except:
+                os.chdir(prevdir)
+                raise
             os.chdir(prevdir)
         else:
             self.logger.error("Currently, Ethereum only is supported.")
@@ -184,6 +202,7 @@ class LedgerSubsystem:
         self.timer = threading.Timer(self.interval, self.subsystem_timer)
         self.timer.start()
         self.enabled = True
+        self.logger.debug("enabled")
 
 
     def disable(self):
@@ -194,6 +213,7 @@ class LedgerSubsystem:
         """
         self.timer.cancel()
         self.enabled = False
+        self.logger.debug("disabled")
 
 
     def get_merkle_base(self, digest):

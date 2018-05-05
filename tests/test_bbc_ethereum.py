@@ -8,7 +8,6 @@ import time
 import sys
 sys.path.extend(["../"])
 from bbc1.core import bbc_config
-from bbc1.core.ethereum import setup
 from bbc1.core.ethereum import bbc_ethereum
 import bbc1
 
@@ -23,25 +22,25 @@ class Args:
     def __init__(self):
 
         self.workingdir = bbc_config.DEFAULT_WORKING_DIR
-        self.config = os.path.join(self.workingdir, TEST_CONFIG_FILE)
+        self.config = TEST_CONFIG_FILE
         self.networkid = bbc_config.DEFAULT_ETHEREUM_CHAIN_ID
-        self.port = bbc_config.DEFAULT_ETHEREUM_GETH_PORT
+        self.gethport = bbc_config.DEFAULT_ETHEREUM_GETH_PORT
         self.log = TEST_LOG_FILE
 
 
 @pytest.fixture()
 def default_config():
-    return setup.setup_config(Args())
+    args = Args()
+    return bbc_ethereum.setup_config(args.workingdir, args.config,
+            args.networkid, args.gethport, args.log)
 
 
 def test_setup_populus():
 
-    setup.setup_populus()
+    bbc_ethereum.setup_populus()
 
     prevdir = os.getcwd()
-    dir = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(dir)
-    os.chdir('../bbc1/core/ethereum')
+    os.chdir(bbc1.__path__[0] + '/core/ethereum')
 
     if os.path.exists('populus.json'):
         f = open('populus.json', 'r')
@@ -60,12 +59,10 @@ def test_setup_populus():
 
 def test_setup_genesis(default_config):
 
-    setup.setup_genesis(default_config)
+    bbc_ethereum.setup_genesis(default_config)
 
     prevdir = os.getcwd()
-    dir = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(dir)
-    os.chdir('../bbc1/core/ethereum')
+    os.chdir(bbc1.__path__[0] + '/core/ethereum')
 
     f = open('genesis.json', 'r')
     jGenesis = json.load(f)
@@ -84,7 +81,7 @@ def test_setup_genesis(default_config):
 
 def test_setup_new_account(default_config):
 
-    setup.setup_new_account(default_config, TEST_PASSPHRASE1)
+    bbc_ethereum.setup_new_account(default_config, TEST_PASSPHRASE1)
 
     prevdir = os.getcwd()
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
@@ -107,8 +104,6 @@ def test_setup_new_account(default_config):
 def test_setup_account(default_config):
 
     prevdir = os.getcwd()
-    dir = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(dir)
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
 
     f = open(TEST_CONFIG_FILE, 'r')
@@ -120,8 +115,8 @@ def test_setup_account(default_config):
     account = config['ethereum']['account']
     passphrase = config['ethereum']['passphrase']
 
-    setup.setup_new_account(default_config, TEST_PASSPHRASE2)
-    setup.setup_account(default_config, account, passphrase)
+    bbc_ethereum.setup_new_account(default_config, TEST_PASSPHRASE2)
+    bbc_ethereum.setup_account(default_config, account, passphrase)
 
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
 
@@ -138,7 +133,7 @@ def test_setup_account(default_config):
 
 def test_setup_run(default_config):
 
-    setup.setup_run(default_config)
+    bbc_ethereum.setup_run(default_config)
 
     prevdir = os.getcwd()
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
@@ -163,7 +158,7 @@ def test_setup_run(default_config):
 
 def test_setup_deploy(default_config):
 
-    setup.setup_deploy(default_config)
+    bbc_ethereum.setup_deploy(default_config)
 
     prevdir = os.getcwd()
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
@@ -212,7 +207,7 @@ def test_setup_stop(default_config):
 
     pid = config['ethereum']['pid']
 
-    setup.setup_stop(default_config)
+    bbc_ethereum.setup_stop(default_config)
 
     os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
 
