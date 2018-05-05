@@ -9,7 +9,7 @@ def anchor_contract(chain):
     contract_address = chain.wait.for_contract_address(deploy_txid)
     return AnchorFactory(address=contract_address)
 
-def test_my_token(anchor_contract, chain):
+def test_my_anchor(anchor_contract, chain):
 
     account0 = chain.web3.eth.accounts[0]
     account1 = chain.web3.eth.accounts[1]

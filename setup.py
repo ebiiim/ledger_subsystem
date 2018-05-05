@@ -27,7 +27,6 @@ class MyInstall(install):
             install.run(self)
         except Exception as e:
             print(e)
-            print("Error compiling openssl.")
             exit(1)
 
 
@@ -40,7 +39,9 @@ bbc1_requires = [
 
 bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
 
-bbc1_commands = []
+bbc1_commands = [
+                    'utils/eth_subsystem_tool.py',
+                ]
 
 bbc1_classifiers = [
                     'Development Status :: 4 - Beta',
@@ -50,10 +51,10 @@ bbc1_classifiers = [
 
 setup(
     name='ledger_subsystem',
-    version='0.0.1',
-    description='A core system of Beyond Blockchain One',
+    version='0.11.0',
+    description='A ledger subsystem of Beyond Blockchain One',
     long_description=readme,
-    url='https://github.com/beyond-blockchain/bbc1',
+    url='https://github.com/beyond-blockchain/ledger_subsystem',
     author='beyond-blockchain.org',
     author_email='bbc1-dev@beyond-blockchain.org',
     license='Apache License 2.0',
