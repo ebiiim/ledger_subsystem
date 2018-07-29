@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.23;
 
 contract BBcAnchor {
 
@@ -21,18 +21,18 @@ contract BBcAnchor {
 
     event Stored(uint256 indexed digest, uint block_no);
     
-    function BBcAnchor() {
+    constructor () public {
     }
 
-    function getStored(uint256 digest) returns (uint block_no) {
+    function getStored(uint256 digest) public returns (uint block_no) {
         return (_digests[digest]);
     }
 
-    function isStored(uint256 digest) returns (bool isStored) {
+    function isStored(uint256 digest) public returns (bool isStored) {
         return (_digests[digest] > 0);
     }
 
-    function store(uint256 digest) returns (bool isAlreadyStored) {
+    function store(uint256 digest) public returns (bool isAlreadyStored) {
 
         bool isRes = _digests[digest] > 0;
 
