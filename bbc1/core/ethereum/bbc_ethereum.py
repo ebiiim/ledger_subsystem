@@ -304,6 +304,7 @@ def setup_run(bbcConfig):
         '--nodiscover',
         '--etherbase', config['ethereum']['account'],
         '--mine',
+        '--miner.threads', '1',
     ], stderr=log)
 
     config['ethereum']['pid'] = proc.pid
