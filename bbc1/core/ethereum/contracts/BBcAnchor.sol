@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-pragma solidity ^0.4.23;
+pragma solidity >=0.4.23 <0.6.0;
 
 contract BBcAnchor {
 
@@ -38,7 +38,7 @@ contract BBcAnchor {
 
         if (!isRes) {
             _digests[digest] = block.number;
-            Stored(digest, _digests[digest]);
+            emit Stored(digest, _digests[digest]);
         }
 
         return (isRes);

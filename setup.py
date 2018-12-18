@@ -51,7 +51,7 @@ bbc1_classifiers = [
 
 setup(
     name='ledger_subsystem',
-    version='0.11.1',
+    version='0.12.0',
     description='A ledger subsystem of Beyond Blockchain One',
     long_description=readme,
     url='https://github.com/beyond-blockchain/ledger_subsystem',
