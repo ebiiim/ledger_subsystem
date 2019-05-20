@@ -24,11 +24,11 @@ contract BBcAnchor {
     constructor () public {
     }
 
-    function getStored(uint256 digest) public returns (uint block_no) {
+    function getStored(uint256 digest) public view returns (uint block_no) {
         return (_digests[digest]);
     }
 
-    function isStored(uint256 digest) public returns (bool isStored) {
+    function isStored(uint256 digest) public view returns (bool isStored) {
         return (_digests[digest] > 0);
     }
 
