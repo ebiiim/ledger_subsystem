@@ -69,25 +69,27 @@ class Queue:
 
 
 class LedgerSubsystem:
+    """Abstraction of an underlying ledger subsystem (typically a blockchain).
+        This takes a digest (not necessarily on a transaction) to record and
+        verifies its existence. It forms some Merkle trees of digests, and
+        only writes their root digests to the underlying ledger.
+
     """
-    Abstraction of an underlying ledger subsystem that is typically a
-    blockchain. This takes one transaction each to record and verifies its
-    existence. It forms some Merkle trees of transaction IDs, and only writes
-    their root digests to the underlying ledger.
-    """
+
     def __init__(self, config, networking=None, domain_id=None, enabled=False,
             loglevel="all", logname=None):
-        """
-        Constructs a ledger subsystem. Just supports sqlite3.
+        """Constructs a ledger subsystem. Currently just supports sqlite3.
 
-        :param config: configuration object
-        :param networking: networking (need access to ledger manager)
-        :param domain_id:
-        :param enabled: if communication with the underlying ledger is enabled
-        :param loglevel: loggging level
-        :param logname: name of log
-        :return:
+        Args:
+            config (BBcConfig): The configuration object
+            networking: The networking (need access to ledger manager)
+            domain_id (bytes): The domain ID.
+            enabled (bool): If communication with the subsystem is enabled.
+            loglevel (str): The loggging level.
+            logname (str): The name of the log.
+
         """
+
         self.networking = networking
         self.domain_id = domain_id
         if domain_id is None:
@@ -176,11 +178,10 @@ class LedgerSubsystem:
 
 
     def enable(self):
-        """
-        Enables communication with the underlying ledger.
+        """Enables communication with the underlying ledger.
 
-        :return:
         """
+
         if self.config['ledger_subsystem']['subsystem'] == 'ethereum':
             prevdir = os.getcwd()
             if not os.path.exists('ethereum/contracts/BBcAnchor.sol'):
@@ -188,8 +189,8 @@ class LedgerSubsystem:
             os.chdir('ethereum')
             try:
                 self.eth = bbc_ethereum.BBcEthereum(
-                    self.eth_config['account'],
-                    self.eth_config['passphrase'],
+                    self.eth_config['network'],
+                    self.eth_config['private_key'],
                     self.eth_config['contract_address']
                 )
             except:
@@ -206,11 +207,10 @@ class LedgerSubsystem:
 
 
     def disable(self):
-        """
-        Disables communication with the underlying ledger.
+        """Disables communication with the underlying ledger.
 
-        :return:
         """
+
         self.timer.cancel()
         self.enabled = False
         self.logger.debug("disabled")
@@ -232,12 +232,13 @@ class LedgerSubsystem:
 
 
     def register_transaction(self, transaction_id):
-        """
-        Registers a transaction.
+        """Registers a digest (not necessarily a transaction).
 
-        :param transaction_id: transaction to register
-        :return:
+        Args:
+            transaction_id (bytes): The digest to register (need not to be TX).
+
         """
+
         if self.enabled:
             self.append_msg(transaction_id)
         else:
@@ -287,12 +288,15 @@ class LedgerSubsystem:
 
 
     def verify_transaction(self, transaction_id):
-        """
-        Verifies whether the specified transaction is registered or not.
+        """Verifies whether the specified digest is registered or not.
 
-        :param transaction_id: transaction to verify its existence
-        :return: dictionary containing the result (and a Merkle subtree)
+        Args:
+            transaction_id: The digest to verify its existence.
+
+        Returns:
+            dictionary (dict): The result (and a Merkle subtree).
         """
+
         dic = dict()
         if self.enabled:
             e = threading.Event()
@@ -346,7 +350,7 @@ class LedgerSubsystem:
             return
         spec = {
             'subsystem': specList[0],
-            'chain_id': specList[1],
+            'network': specList[1],
             'contract': specList[2],
             'contract_address': specList[3],
             'block': block,
@@ -412,8 +416,8 @@ class LedgerSubsystem:
     def write_merkle_root(self, root):
         self.write_root(
             root=root,
-            spec='ethereum:%d:BBcAnchor:%s' %
-                 (self.eth_config['chain_id'],
+            spec='ethereum:%s:BBcAnchor:%s' %
+                 (self.eth_config['network'],
                   self.eth_config['contract_address'])
         )
         self.eth.blockingSet(root)

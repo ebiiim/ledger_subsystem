@@ -20,8 +20,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import argparse
+from brownie import *
 import json
-import populus
 import os
 import subprocess
 import time
@@ -39,57 +39,41 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
         super().__init__(
             name='Ethereum',
             tool='eth_subsystem_tool.py',
-            version='0.11.0'
+            version='0.12.0'
         )
 
 
     def _add_additional_arguments(self):
-        self.argparser.add_argument('-l', '--log', type=str,
-                default=bbc_config.DEFAULT_ETHEREUM_LOG_FILE,
-                help='geth log file name')
-        self.argparser.add_argument('-n', '--networkid', type=int,
-                default=bbc_config.DEFAULT_ETHEREUM_CHAIN_ID,
-                help='geth network id number')
-        self.argparser.add_argument('-gp', '--gethport', type=int,
-                default=bbc_config.DEFAULT_ETHEREUM_GETH_PORT,
-                help='geth port number')
+        self.argparser.add_argument('-n', '--network', type=str,
+                default='ropsten',
+                help='network name')
 
         # account command
         parser = self.subparsers.add_parser('account',
                 help='Set an Ethereum account')
-        parser.add_argument('address', action='store',
-                help='Address of the account')
-        parser.add_argument('passphrase', action='store',
-                help='Passphrase of the account')
+        parser.add_argument('private_key', action='store',
+                help='Private key of the account')
 
         # auto command
         parser = self.subparsers.add_parser('auto',
                 help='Automatically set up everything')
-        parser.add_argument('passphrase', action='store',
-                help='Passphrase of a new account')
+        parser.add_argument('project_id', action='store',
+                help='INFURA project ID')
+        parser.add_argument('private_key', action='store',
+                help='Private key of the account')
 
         # deploy command
         self.subparsers.add_parser('deploy', help='Deploy the anchor contract')
 
-        # genesis command
-        self.subparsers.add_parser('genesis',
-                help='Create Ethereum genesis block')
-
         # new_account command
         parser = self.subparsers.add_parser('new_account',
                 help='Create a new Ethereum account')
-        parser.add_argument('passphrase', action='store',
-                help='Passphrase of the new account')
 
-        # populus command
-        self.subparsers.add_parser('populus',
-                help='Initialize populus environment')
-
-        # run_geth command
-        self.subparsers.add_parser('run_geth', help='Run local geth node')
-
-        # stop_geth command
-        self.subparsers.add_parser('stop_geth', help='Stop local geth node')
+        # brownie command
+        parser = self.subparsers.add_parser('brownie',
+                help='Initialize brownie and infura environment')
+        parser.add_argument('project_id', action='store',
+                help='INFURA project ID')
 
         # test command
         self.subparsers.add_parser('test', help='Test the anchor contract')
@@ -102,16 +86,16 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
             return 0
 
         bbcConfig = bbc_ethereum.setup_config(args.workingdir, args.config,
-            args.networkid, args.gethport, args.log)
+                args.network)
         config = bbcConfig.get_config()
 
         prevdir = os.getcwd()
         os.chdir(bbc1.__path__[0] + '/core/ethereum')
 
         eth = bbc_ethereum.BBcEthereum(
-            config['ethereum']['account'],
-            config['ethereum']['passphrase'],
-            contract_address=spec[b'contract_address']
+            config['ethereum']['network'],
+            config['ethereum']['private_key'],
+            contract_address=spec[b'contract_address'].decode('utf-8')
         )
 
         os.chdir(prevdir)
@@ -124,44 +108,27 @@ if __name__ == '__main__':
     subsystem_tool = EthereumSubsystemTool()
     args = subsystem_tool.parse_arguments()
     bbcConfig = bbc_ethereum.setup_config(args.workingdir, args.config,
-            args.networkid, args.gethport, args.log)
+            args.network)
 
     if args.command_type == 'auto':
-        print("Setting up populus.")
-        bbc_ethereum.setup_populus()
-        print("Setting up an Ethereum genesis block.")
-        bbc_ethereum.setup_genesis(bbcConfig)
-        print("Setting up a new Ethereum account.")
-        bbc_ethereum.setup_new_account(bbcConfig, args.passphrase)
-        print("Starting a local geth node.")
-        bbc_ethereum.setup_run(bbcConfig)
-        print("10-second interval for mining.")
-        time.sleep(10)
+        print("Setting up brownie.")
+        bbc_ethereum.setup_brownie(args.project_id)
+        print("Setting up an Ethereum account.")
+        bbc_ethereum.setup_account(bbcConfig, args.private_key)
         print("Deploying the anchor contract.")
         bbc_ethereum.setup_deploy(bbcConfig)
-        print("To stop the local geth node, "
-                "type 'eth_subsystem_tool.py stop_geth'.")
 
-    elif args.command_type == 'populus':
-        bbc_ethereum.setup_populus()
+    elif args.command_type == 'brownie':
+        bbc_ethereum.setup_brownie(args.project_id)
 
     elif args.command_type == 'test':
         bbc_ethereum.setup_test()
 
-    elif args.command_type == 'genesis':
-        bbc_ethereum.setup_genesis(bbcConfig)
-
     elif args.command_type == 'new_account':
-        bbc_ethereum.setup_new_account(bbcConfig, args.passphrase)
+        bbc_ethereum.setup_new_account(bbcConfig)
 
     elif args.command_type == 'account':
-        bbc_ethereum.setup_account(bbcConfig, args.address, args.passphrase)
-
-    elif args.command_type == 'run_geth':
-        bbc_ethereum.setup_run(bbcConfig)
-
-    elif args.command_type == 'stop_geth':
-        bbc_ethereum.setup_stop(bbcConfig)
+        bbc_ethereum.setup_account(bbcConfig, args.private_key)
 
     elif args.command_type == 'deploy':
         bbc_ethereum.setup_deploy(bbcConfig)

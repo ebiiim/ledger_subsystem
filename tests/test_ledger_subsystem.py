@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Run tests/test_bbc_ethereum.py before this to fill an account data and deploy
-a contract for testing.
-After the test is complete, the program may need to be stopped by a keyboard
-interrupt.
+This test is performed on ledger subsystem with Ethereum, over 'development'
+network of brownie. This test takes approximately 70 seconds to complete.
 """
 import pytest
 import hashlib
@@ -16,12 +14,8 @@ import bbc1
 from bbc1.core import bbclib
 from bbc1.core import ledger_subsystem, bbc_stats, bbc_network, bbc_config
 from bbc1.core.ethereum import bbc_ethereum
-from tests import test_bbc_ethereum
+from tests import test_bbc_ethereum1
 
-
-DEFAULT_ETHEREUM_LOG_FILE = 'geth.log'
-DEFAULT_ETHEREUM_CHAIN_ID = 15
-DEFAULT_ETHEREUM_GETH_PORT = 30303
 
 domain_id1 = bbclib.get_new_id("test_domain1")
 domain_id2 = bbclib.get_new_id("test_domain2")
@@ -43,9 +37,9 @@ class DummyCore:
 @pytest.fixture()
 def default_config():
 
-    args = test_bbc_ethereum.Args()
+    args = test_bbc_ethereum1.Args()
     config = bbc_ethereum.setup_config(args.workingdir, args.config,
-            args.networkid, args.gethport, args.log)
+            'development')
     conf = config.get_config()
 
     db_conf = {
@@ -95,17 +89,12 @@ def default_config():
 
 def test_ledger_subsystem(default_config):
 
-    bbc_ethereum.setup_run(default_config)
+    bbc_ethereum.setup_deploy(default_config)
 
     prevdir = os.getcwd()
     os.chdir(bbc1.__path__[0] + '/core/ethereum')
 
     conf = default_config.get_config()
-    eth = bbc_ethereum.BBcEthereum(
-        conf['ethereum']['account'],
-        conf['ethereum']['passphrase'],
-        conf['ethereum']['contract_address']
-    )
 
     os.chdir('..')
 
@@ -115,6 +104,11 @@ def test_ledger_subsystem(default_config):
 
     ls = ledger_subsystem.LedgerSubsystem(default_config,
             networking=networking, domain_id=domain_id1, enabled=True)
+    eth = bbc_ethereum.BBcEthereum(
+        conf['ethereum']['network'],
+        private_key=conf['ethereum']['private_key'],
+        contract_address=conf['ethereum']['contract_address']
+    )
 
     for i in range(150):
         ls.register_transaction(hashlib.sha256(i.to_bytes(4, 'big')).digest())
@@ -160,7 +154,6 @@ def test_ledger_subsystem(default_config):
     assert eth.verify(digest, j['subtree']) > 0
 
     os.chdir(prevdir)
-    bbc_ethereum.setup_stop(default_config)
 
 
 # end of tests/test_ledger_subsystem_.py
