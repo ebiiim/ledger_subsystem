@@ -19,6 +19,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import gevent
+from gevent import monkey
+monkey.patch_all()
+
 import argparse
 from brownie import *
 import json
@@ -46,7 +50,7 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
     def _add_additional_arguments(self):
         self.argparser.add_argument('-n', '--network', type=str,
                 default='ropsten',
-                help='network name')
+                help='network name (ropsten by default)')
 
         # account command
         parser = self.subparsers.add_parser('account',
@@ -126,6 +130,10 @@ if __name__ == '__main__':
 
     elif args.command_type == 'new_account':
         bbc_ethereum.setup_new_account(bbcConfig)
+        print("private_key (copy and save somewhere):")
+        print(accounts[0].private_key)
+        print("address (copy and save somewhere):")
+        print(accounts[0].address)
 
     elif args.command_type == 'account':
         bbc_ethereum.setup_account(bbcConfig, args.private_key)
