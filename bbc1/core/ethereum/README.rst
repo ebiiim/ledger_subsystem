@@ -2,7 +2,8 @@ Ledger subsystem with Ethereum for BBc-1
 ========================================
 
 Files in this directory supports the ledger subsystem with Ethereum
-blockchain for BBc-1. Currently supports local geth chain only.
+blockchain for BBc-1. Currently supports brownie, with infura.io to
+access to ropsten test network and mainnet of Ethereum.
 
 Ledger subsystem
 ----------------
@@ -11,8 +12,8 @@ Ledger subsystem
 
    -  abstraction of BBcAnchor smart contract that would store Merkle
       roots of transactions.
-   -  also provides setup library functions for Populus environment and
-      geth Ethereum node.
+   -  also provides setup library functions for brownie environment and
+      to use infura.io projects.
    -  also provides verify function that takes a Merkle subtree for
       independent verification from BBc-1.
 
@@ -22,52 +23,40 @@ Ledger subsystem
 
 -  **utils/eth_subsystem_tool.py**
 
-   -  sets up Populus environment and geth Ethereum node. See usage
-      below.
+   -  sets up brownie environment and to use infura.io projects to
+      access Ethereum networks. See usage below.
 
 Dependencies
 ------------
 
--  populus 1.10.1 (note that rlp==0.5.1), 1.11.0-2.1.0 (rlp==0.6.0)
-   (pip-installed)
--  geth (go ethereum) 1.7.2-1.8.7 (install with apt or brew)
--  solc (solidity) 0.4.17-0.4.23 (install with apt or brew)
+-  brownie>=1.0.0b7 (pip-installed) (pre 1.0.0b7 installation requires
+   tests branch clone of brownie)
+-  solc (solidity) 0.5 (install with apt or brew) (actual compilation
+   uses py-solc-x installed with brownie, but requires depedencies for
+   solc anyway)
 
 How to use
 ----------
 
 For the example below, we assume that BBc-1 Core and the ledger
 subsystem are pip-installed, and ‘bbc_core.py’ is running at the user’s
-home directory (the “config.json” file resides under “~/.bbc1”).
+home directory (the “config.json” file resides under “~/.bbc1”). The
+default Ethereum network is ropsten test network.
 
-1. Set up populus environment
-
-::
-
-   $ eth_subsystem_tool.py -w ~/.bbc1 populus
-
-2. Set up genesis block of a local geth chain
+1. Set up brownie environment
 
 ::
 
-   $ eth_subsytem_tool.py -w ~/.bbc1 genesis
+   $ eth_subsystem_tool.py -w ~/.bbc1 brownie <infura.io project ID>
 
-3. Set up a new Ethereum account
-
-::
-
-   $ eth_subsystem_tool.py -w ~/.bbc1 new_account <passphrase>
-
-4. Run the local geth chain
+2. Set up a new Ethereum account
 
 ::
 
-   $ eth_subsystem_tool.py -w ~/.bbc1 run_geth
+   $ eth_subsystem_tool.py -w ~/.bbc1 new_account
 
-For the first execution, this would take some tens of minutes for mining
-to be started.
-
-5. Deploy BBcAnchor smart contract
+3. Load the account with ETH from the specified network
+4. Deploy BBcAnchor smart contract
 
 ::
 
@@ -76,27 +65,16 @@ to be started.
 You are all set, and you can run ledger_subsystem with enabled=True
 argument or enable() it.
 
-If your geth chain has already been mined, then you may want to try
+If you are sure, then you may want to try
 
 ::
 
-   $ eth_subsystem_tool.py -w ~/.bbc1 auto <passphrase>
+   $ eth_subsystem_tool.py -w ~/.bbc1 auto <infura project ID> <private_key>
 
-to automatically set up everything (but beware that the contract address
-will be overwritten. Consider this as a testing feature, useful when
-BBc-1 configuration has been erased).
-
-When you want to stop the local geth chain,
-
-::
-
-   $ eth_subsystem_tool.py -w ~/.bbc1 stop_geth
-
-When you want to resume, just
-
-::
-
-   $ eth_subsystem_tool.py -w ~/.bbc1 run_geth
+to automatically set up everything with an existing Ethereum account
+with sufficient ETH balance at the specified network (but beware that
+the contract address will be overwritten. Consider this as a testing
+feature, useful when BBc-1 configuration has been erased).
 
 You do not need to set up an account or deploy the contract again. The
 information is all written into the config file of BBc-1 core.
@@ -104,6 +82,6 @@ information is all written into the config file of BBc-1 core.
 Tests
 -----
 
--  **tests/test_bbc_ethereum.py** — run prior to
-   test_ledger_subsystem.py
+-  **tests/test_bbc_ethereum1.py**
+-  **tests/test_bbc_ethereum2.py**
 -  **tests/test_ledger_subsystem.py**

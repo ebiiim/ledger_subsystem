@@ -28,7 +28,7 @@ def wait_check_result_msg_type(callback, msg_type):
     if dat is None:
         print("Error: subsystem is not ready; "
                 "make sure of the following conditions:")
-        print("  * blockchain node (i.e., geth/bitcoind) is running.")
+        print("  * blockchain network (e.g. via infura.io) is accessible.")
         print("  * bbc_core.py is started with '--ledgersubsystem'.")
         print("  * subsystem is configured with config_tree command.")
         sys.exit(1)

@@ -1,36 +1,32 @@
 # -*- coding: utf-8 -*-
-import pytest
+from brownie import *
+import scripts.bbc_anchor
 
-@pytest.fixture()
-def anchor_contract(chain):
-    AnchorFactory = chain.provider.get_contract_factory('BBcAnchor')
-    deploy_txid = AnchorFactory.deploy(args=[])
 
-    contract_address = chain.wait.for_contract_address(deploy_txid)
-    return AnchorFactory(address=contract_address)
+def setup():
+    scripts.bbc_anchor.main()
 
-def test_my_anchor(anchor_contract, chain):
 
-    account0 = chain.web3.eth.accounts[0]
-    account1 = chain.web3.eth.accounts[1]
+def test_my_anchor():
 
     digest0 = 0x000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f
     digest1 = 0x800102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f
 
-    assert anchor_contract.call().isStored(digest0) == False
-    assert anchor_contract.call().getStored(digest0) == 0
+    anchor = BBcAnchor[0]
 
-    txid = anchor_contract.transact().store(digest0)
-    chain.wait.for_receipt(txid)
+    check.true(anchor.isStored(digest0) == False)
+    check.true(anchor.getStored(digest0) == 0)
 
-    assert anchor_contract.call().isStored(digest0) == True
-    assert anchor_contract.call().getStored(digest0) > 0
+    anchor.store(digest0, {'from': accounts[0]})
 
-    assert anchor_contract.call().isStored(digest1) == False
+    check.true(anchor.isStored(digest0) == True)
+    check.true(anchor.getStored(digest0) > 0)
 
-    txid = anchor_contract.transact().store(digest1)
-    chain.wait.for_receipt(txid)
+    check.true(anchor.isStored(digest1) == False)
 
-    assert anchor_contract.call().isStored(digest1) == True
+    anchor.store(digest1, {'from': accounts[0]})
+
+    check.true(anchor.isStored(digest1) == True)
+
 
 # end of test_bbc_anchor.py

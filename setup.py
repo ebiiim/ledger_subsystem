@@ -31,10 +31,7 @@ class MyInstall(install):
 
 
 bbc1_requires = [
-                    'populus==2.1.0',
-                    'rlp==0.6.0',
-                    'eth-utils==0.7.4',
-                    'web3==3.16.5',
+                    'eth-brownie>=1.0.0b6',
                 ]
 
 bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
@@ -51,7 +48,7 @@ bbc1_classifiers = [
 
 setup(
     name='ledger_subsystem',
-    version='0.12.0',
+    version='0.13',
     description='A ledger subsystem of Beyond Blockchain One',
     long_description=readme,
     url='https://github.com/beyond-blockchain/ledger_subsystem',

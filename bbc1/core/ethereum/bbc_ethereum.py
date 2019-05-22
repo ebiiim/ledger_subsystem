@@ -15,13 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import binascii
+from brownie import *
 import hashlib
 import json
 import os
-from populus import Project
-from populus.utils.wait import wait_for_transaction_receipt
 import subprocess
-from web3 import Web3
+import time
 
 import sys
 sys.path.extend(["../../../"])
@@ -40,55 +39,89 @@ def chdir_to_this_filepath():
     return prevdir
 
 
-def setup_account(bbcConfig, account, passphrase):
-    """
-    Sets the specified Ethereum account to be used in the ledger subsystem.
+def setup_account(bbcConfig, private_key):
+    """Sets the specified Ethereum account to be used in the ledger subsystem.
 
-    :param bbcConfig: configuration object
-    :param account: Ethereum account in hexadecimal prefixed with '0x'
-    :param passphrase: Passphrase to unlock the account
-    :return:
+    Args:
+        bbcConfig (BBcConfig): The configuration object.
+        private_key (str): The private key of the account in hex string.
+
     """
     config = bbcConfig.get_config()
-    config['ethereum']['account'] = account
-    config['ethereum']['passphrase'] = passphrase
+    config['ethereum']['private_key'] = private_key
 
     prevdir = chdir_to_core_path()
     bbcConfig.update_config()
     os.chdir(prevdir)
 
 
-def setup_config(workingdir, filename, networkid, port, log):
+def setup_brownie(infura_project_id):
+    """Sets up a brownie environment for Ethereum ledger subsytem.
+        Initializes the environment and compiles BBcAnchor contract.
+
+    Args:
+        infura_project_id (str): INFURA project ID.
+            To be used for setting up 'ropsten' and 'mainnet' networks.
+
+    """
+    prevdir = chdir_to_this_filepath()
+    subprocess.call(['brownie', 'init'])
+
+    if os.path.exists('brownie-config.json'):
+
+        f = open('brownie-config.json', 'r')
+        jBrow = json.load(f)
+        f.close()
+
+        jRopsten = {
+            'host': 'https://ropsten.infura.io/v3/' + infura_project_id,
+            'broadcast_reverting_tx': False,
+        }
+        jMainnet = {
+            'host': 'https://mainnet.infura.io/v3/' + infura_project_id,
+            'broadcast_reverting_tx': False,
+        }
+    
+        jNetworks = jBrow['networks']
+        jNetworks['ropsten'] = jRopsten
+        jNetworks['mainnet'] = jMainnet
+
+        f = open('brownie-config.json', 'w')
+        json.dump(jBrow, f, indent=2)
+        f.close()
+
+    subprocess.call(['brownie', 'compile'])
+    os.chdir(prevdir)
+
+
+def setup_config(working_dir, file_name, network_name):
+    """Sets Ethereum brownie configuration.
+
+    Args:
+        working_dir (str): The working directory of BBc-1 core.
+        file_name (str): The file name of BBc-1 core configuration file.
+        network_name (str): The name of the brownie network.
+
+    """
 
     prevdir = chdir_to_core_path()
 
-    bbcConfig = bbc_config.BBcConfig(workingdir,
-            os.path.join(workingdir, filename))
+    bbcConfig = bbc_config.BBcConfig(working_dir,
+            os.path.join(working_dir, file_name))
     config = bbcConfig.get_config()
 
     isUpdated = False
 
-    if not 'ethereum' in config:
+    if not 'ethereum' in config or not 'network' in config['ethereum']:
         config['ethereum'] = {
-            'chain_id': networkid,
-            'port': port,
-            'log': log,
-            'account': '',
-            'passphrase': '',
+            'network': network_name,
+            'private_key': '',
             'contract_address': '',
         }
         isUpdated = True
 
-    elif config['ethereum']['chain_id'] != networkid:
-        config['ethereum']['chain_id'] = networkid
-        isUpdated = True
-
-    elif config['ethereum']['port'] != port:
-        config['ethereum']['port'] = port
-        isUpdated = True
-
-    elif config['ethereum']['log'] != log:
-        config['ethereum']['log'] = log
+    elif config['ethereum']['network'] != network_name:
+        config['ethereum']['network'] = network_name
         isUpdated = True
 
     if isUpdated:
@@ -100,16 +133,18 @@ def setup_config(workingdir, filename, networkid, port, log):
 
 
 def setup_deploy(bbcConfig):
-    """
-    Deploys BBcAnchor contract to Ethereum ledger subsystem.
+    """Deploys BBcAnchor contract to Ethereum ledger subsystem.
 
-    :param bbcConfig: configuration object
-    :return:
+    Args:
+        bbcConfig (BBcConfig): The configuration object.
+
     """
+
     prevdir = chdir_to_this_filepath()
+
     config = bbcConfig.get_config()
-    bbcEthereum = BBcEthereum(config['ethereum']['account'],
-            config['ethereum']['passphrase'])
+    bbcEthereum = BBcEthereum(config['ethereum']['network'],
+            private_key=config['ethereum']['private_key'])
 
     contract_address = config['ethereum']['contract_address']
     if contract_address != '':
@@ -117,314 +152,139 @@ def setup_deploy(bbcConfig):
 
     config['ethereum']['contract_address'] = bbcEthereum.get_contract_address()
 
+    os.chdir('..')
+    bbcConfig.update_config()
+    os.chdir(prevdir)
+
+
+def setup_new_account(bbcConfig):
+    """Creates a new Ethereum account to be used in the ledger subsystem.
+
+    Args:
+        bbcConfig (BBcConfig): The configuration object.
+
+    """
+
+    prevdir = chdir_to_this_filepath()
+
+    config = bbcConfig.get_config()
+
+    project.load('.')
+    network.connect(config['ethereum']['network'])
+
+    accounts.add()
+    config['ethereum']['private_key'] = accounts[0].private_key
 
     os.chdir('..')
     bbcConfig.update_config()
     os.chdir(prevdir)
 
 
-def setup_genesis(bbcConfig):
-    """
-    Creates the genesis block of Ethereum ledger subsystem.
-
-    :param bbcConfig: configuration object
-    :return:
-    """
-    prevdir = chdir_to_this_filepath()
-    config = bbcConfig.get_config()
-
-    jGenesis = {
-      "config": {
-        "chainId": config['ethereum']['chain_id'],
-        "homesteadBlock": 0,
-        "eip155Block": 0,
-        "eip158Block": 0
-      },
-      "difficulty": "0x200",
-      "gasLimit": "2100000",
-      "alloc": {
-      }
-    }
-
-    f = open('genesis.json', 'w')
-    json.dump(jGenesis, f, indent=2)
-    f.close()
-
-    subprocess.call(['geth', 'init', 'genesis.json'])
-    os.chdir(prevdir)
-
-
-def setup_new_account(bbcConfig, passphrase):
-    """
-    Creates a new Ethereum account to be used in the ledger subsystem.
-
-    :param bbcConfig: configuration object
-    :param passphrase: Passphrase to unlock the new account
-    :return:
-    """
-    prevdir = chdir_to_core_path()
-    PASSWORD_FILE = '_password'
-
-    f = open(PASSWORD_FILE, 'w')
-    f.write(passphrase + '\n')
-    f.close()
-
-    bytes = subprocess.check_output(
-        ['geth', 'account', 'new', '--password', PASSWORD_FILE]
-    )
-
-    config = bbcConfig.get_config()
-    config['ethereum']['account'] = '0x' + bytes.decode('utf-8')[10:50]
-    config['ethereum']['passphrase'] = passphrase
-    bbcConfig.update_config()
-
-    os.remove(PASSWORD_FILE)
-    os.chdir(prevdir)
-
-
-def setup_populus():
-    """
-    Sets up a Populus environment to communicate with Ethereum ledger subsytem.
-    Initializes the environment and compiles BBcAnchor contract.
-
-    :return:
-    """
-    prevdir = chdir_to_this_filepath()
-    subprocess.call(['populus', 'init'])
-
-    os.remove('contracts/Greeter.sol')
-    os.remove('tests/test_greeter.py')
-
-    if os.path.exists('populus.json'):
-
-        f = open('populus.json', 'r')
-        jPop = json.load(f)
-        f.close()
-
-        jBBcChain = {
-          "chain": {
-            "class": "populus.chain.ExternalChain"
-          },
-          "contracts": {
-            "backends": {
-              "JSONFile": {
-                "$ref": "contracts.backends.JSONFile"
-              },
-              "Memory": {
-                "$ref": "contracts.backends.Memory"
-              },
-              "ProjectContracts": {
-                "$ref": "contracts.backends.ProjectContracts"
-              },
-              "TestContracts": {
-                "$ref": "contracts.backends.TestContracts"
-              }
-            }
-          },
-          "web3": {
-            "$ref": "web3.GethIPC"
-          }
-        }
-    
-        jChains = jPop['chains']
-        jChains['bbc'] = jBBcChain
-
-        f = open('populus.json', 'w')
-        json.dump(jPop, f, indent=2)
-        f.close()
-
-    elif os.path.exists('project.json'):
-
-        f = open('project.json', 'r')
-        jPop = json.load(f)
-        f.close()
-
-        jBBcChain = {
-          "chain": {
-            "class": "populus.chain.ExternalChain"
-          },
-          "contracts": {
-            "backends": {
-              "JSONFile": {
-                "class": "populus.contracts.backends.filesystem.JSONFileBackend",
-                "priority": 10,
-                "settings": {
-                  "file_path": "./registrar.json"
-                }
-              },
-              "Memory": {
-                "class": "populus.contracts.backends.memory.MemoryBackend",
-                "priority": 50
-              },
-              "ProjectContracts": {
-                "class": "populus.contracts.backends.project.ProjectContractsBackend",
-                "priority": 20
-              },
-              "TestContracts": {
-                "class": "populus.contracts.backends.testing.TestContractsBackend",
-                "priority": 40
-              }
-            }
-          },
-          "web3": {
-            "provider": {
-              "class": "web3.providers.ipc.IPCProvider"
-            }
-          }
-        }
-    
-        jChains = dict()
-        jChains['bbc'] = jBBcChain
-        jPop['chains'] = jChains
-
-        f = open('project.json', 'w')
-        json.dump(jPop, f, indent=2)
-        f.close()
-
-    subprocess.call(['populus', 'compile'])
-    os.chdir(prevdir)
-
-
-def setup_run(bbcConfig):
-    """
-    Runs a geth Ethereum node.
-
-    :param bbcConfig: configuration object
-    :return:
-    """
-    config = bbcConfig.get_config()
-
-    log = open(config['ethereum']['log'], 'a')
-
-    proc = subprocess.Popen([
-        'geth',
-        '--networkid', str(config['ethereum']['chain_id']),
-        '--port', str(config['ethereum']['port']),
-        '--maxpeers', '0',
-        '--nodiscover',
-        '--etherbase', config['ethereum']['account'],
-        '--mine',
-        '--miner.threads', '1',
-    ], stderr=log)
-
-    config['ethereum']['pid'] = proc.pid
-
-    prevdir = chdir_to_core_path()
-    bbcConfig.update_config()
-    os.chdir(prevdir)
-
-
-def setup_stop(bbcConfig):
-    """
-    Stops a geth Ethereum node.
-
-    :param bbcConfig: configuration object
-    :return:
-    """
-    config = bbcConfig.get_config()
-
-    subprocess.call(['kill', str(config['ethereum']['pid'])])
-
-    config['ethereum']['pid'] = None
-
-    prevdir = chdir_to_core_path()
-    bbcConfig.update_config()
-    os.chdir(prevdir)
-
-
 def setup_test():
+    """Tests BBcAnchor contract.
     """
-    Tests BBcAnchor contract.
 
-    :return:
-    """
     prevdir = chdir_to_this_filepath()
-    subprocess.call(['py.test', '.'])
+    subprocess.call(['brownie', 'test'])
     os.chdir(prevdir)
 
 
 class BBcEthereum:
+
+    """Abstraction of an Ethereum version of a proof-of-existnce contract.
     """
-    Abstraction of an Ethereum version of a proof of existnce contact.
-    """
-    def __init__(self, account, passphrase, contract_address=None):
+
+    call_count = 0
+
+    def __init__(self, network_name, private_key=None, contract_address=None):
+        """Initializes the object.
+
+        Args:
+            network_name (str): The name of the brownie network.
+            private_key (str): The private key of the account. None by default.
+                If None, default accounts[0] of the network is assumed.
+            contract_address (str): The deployed contract. None by default.
+                If None, a new contract is deployed.
+
         """
-        Constructs the contract object.
 
-        :param account: Ethereum account in hexadecimal prefixed with '0x'
-        :param passphrase: Passphrase to unlock the account
-        :param contract_address: Deployed contract (if None, it deploys one)
-        :return:
-        """
-        project = Project()
-        chain_name = "bbc"
+        if BBcEthereum.call_count <= 0:
+            project.load('.')
+            network.connect(network_name)
+            if private_key is not None:
+                accounts.add(private_key)
 
-        with project.get_chain(chain_name) as chain:
+        BBcEthereum.call_count += 1
 
-            AnchorFactory = chain.provider.get_contract_factory('BBcAnchor')
+        if contract_address is None:
+            accounts[0].deploy(project.BBcAnchor)
+        else:
+            project.BBcAnchor.at(contract_address)
 
-            chain.web3.personal.unlockAccount(account, passphrase)
-
-            if contract_address is None:
-                txid = AnchorFactory.deploy(
-                    transaction={"from": account},
-                    args=[]
-                )
-                contract_address = chain.wait.for_contract_address(txid)
-
-            self.account = account
-            self.anchor = AnchorFactory(address = contract_address)
-            self.chain = chain
+        self.account = accounts[0]
+        self.anchor = project.BBcAnchor[0]
 
 
     def blockingSet(self, digest):
-        """
-        Registeres a digest in the contract.
+        """Registers a digest in the contract.
 
-        :param digest: Digest to register
-        :return:
+        Args:
+            digest (bytes or int): The digest to register.
+
         """
+
         if type(digest) == bytes:
             digest0 = int.from_bytes(digest, 'big')
         else:
             digest0 = digest
-        txid = self.anchor.transact(
-            transaction={"from": self.account}
-        ).store(digest0)
-        self.chain.wait.for_receipt(txid)
+
+        self.anchor.store(digest0, {'from': self.account})
 
 
     def get_contract_address(self):
-        """
-        Returns the contract address.
+        """Gets the contract address.
 
-        :return: the contract address of the deployed BBcAnchor
+        Returns:
+            address (str): The address of the deployed BBcAnchor contract.
+
         """
+
         return self.anchor.address
 
 
     def test(self, digest):
-        """
-        Verifies whether the digest (Merkle root) is registered or not.
+        """Verifies whether the digest (Merkle root) is registered or not.
 
-        :param digest: Digest (Merkle root) to test existence
-        :return: 0 if not found, otherwise the block number upon registration
+        Args:
+            digest (bytes or int): The digest (Merkle root) to test existence.
+
+        Returns:
+            block_number (int): The block number upon registration.
+                0 if not found.
+
         """
+
         if type(digest) == bytes:
             digest0 = int.from_bytes(digest, 'big')
         else:
             digest0 = digest
-        return self.anchor.call().getStored(digest0)
+
+        return self.anchor.getStored(digest0)
 
 
     def verify(self, digest, subtree):
-        """
-        Verifies whether the digest is included in the registered Merkle tree.
+        """Verifies whether the digest is included in the Merkle tree.
 
-        :param digest: Digest to test existence
-        :param subtree: Merkle subtree to calculate the root
-        :return: 0 if not found, otherwise the block number upon registration
+        Args:
+            digest (bytes or int): The digest to test existence.
+            subtree (list): The Merkle subtree to calculate the root.
+
+        Returns:
+            block_number (int): The block number upon registration.
+                0 if not found.
+
         """
+
         for dic in subtree:
             if 'digest' in dic:
                 digest0 = binascii.a2b_hex(dic['digest'])
@@ -452,7 +312,13 @@ class BBcEthereum:
 if __name__ == '__main__':
 
     # simple test code and usage
-    a = BBcEthereum(sys.argv[1], sys.argv[2], sys.argv[3])
+    if len(sys.argv) == 2:
+        a = BBcEthereum(sys.argv[1])
+    elif len(sys.argv) == 3:
+        a = BBcEthereum(sys.argv[1], private_key=sys.argv[2])
+    elif len(sys.argv) == 4:
+        a = BBcEthereum(sys.argv[1], private_key=sys.argv[2],
+                contract_address=sys.argv[3])
 
     a.blockingSet(0x1234)
     print(a.test(0x1230))
