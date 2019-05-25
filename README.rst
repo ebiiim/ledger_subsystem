@@ -83,15 +83,3 @@ Development
    $ python devmerge.py
 
 4. Use a subsystem tool to set up and use the module.
-
-Notes
-~~~~~
-
-From version 0.13, we moved from populus/geth environment to
-brownie/infura.io environment for the ledger subsystem with Ethereum.
-brownie 1.0.0b6 has a problem working with infura.io, and pre 1.0.0b7
-installation requires to clone the tests branch from github.
-
-::
-
-   $ git clone -b tests https://github.com/HyperLink-Technology/brownie.git
