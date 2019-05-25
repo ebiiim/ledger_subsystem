@@ -14,7 +14,7 @@ Currently supports brownie, with infura.io to access to ropsten test network and
   * sets up brownie environment and to use infura.io projects to access Ethereum networks. See usage below.
 
 ## Dependencies
-* brownie>=1.0.0b7 (pip-installed) (pre 1.0.0b7 installation requires tests branch clone of brownie)
+* brownie>=1.0.0b7 (pip-installed)
 * solc (solidity) 0.5 (install with apt or brew) (actual compilation uses py-solc-x installed with brownie, but requires depedencies for solc anyway)
 
 ## How to use

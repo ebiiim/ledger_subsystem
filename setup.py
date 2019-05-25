@@ -31,7 +31,7 @@ class MyInstall(install):
 
 
 bbc1_requires = [
-                    'eth-brownie>=1.0.0b6',
+                    'eth-brownie>=1.0.0b7',
                 ]
 
 bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
