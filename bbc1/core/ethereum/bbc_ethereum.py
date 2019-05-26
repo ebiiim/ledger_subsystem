@@ -221,7 +221,7 @@ class BBcEthereum:
         else:
             project.BBcAnchor.at(contract_address)
 
-        self.account = accounts[0]
+        self.account = None if len(accounts) <= 0 else accounts[0]
         self.anchor = project.BBcAnchor[0]
 
 
