@@ -43,7 +43,7 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
         super().__init__(
             name='Ethereum',
             tool='eth_subsystem_tool.py',
-            version='0.13.0'
+            version='0.13.1'
         )
 
 
