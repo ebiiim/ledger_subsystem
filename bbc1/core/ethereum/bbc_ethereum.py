@@ -276,13 +276,29 @@ class BBcEthereum:
         """Verifies whether the digest is included in the Merkle tree.
 
         Args:
-            digest (bytes or int): The digest to test existence.
+            digest (bytes): The digest to test existence.
             subtree (list): The Merkle subtree to calculate the root.
 
         Returns:
             block_number (int): The block number upon registration.
                 0 if not found.
+        """
 
+        block_number, root = verify_and_get_root(self, digest, subtree)
+        return block_number
+
+
+    def verify_and_get_root(self, digest, subtree):
+        """Verifies whether the digest is included in the Merkle tree.
+
+        Args:
+            digest (bytes): The digest to test existence.
+            subtree (list): The Merkle subtree to calculate the root.
+
+        Returns:
+            block_number (int): The block number upon registration.
+                0 if not found.
+            root (bytes): The Merkle root
         """
 
         for dic in subtree:
@@ -306,7 +322,7 @@ class BBcEthereum:
                     dRight = digest
                 digest = hashlib.sha256(dLeft + dRight).digest()
 
-        return self.test(digest)
+        return self.test(digest), digest
 
 
 if __name__ == '__main__':
