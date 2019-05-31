@@ -153,6 +153,9 @@ def test_ledger_subsystem(default_config):
     assert j['result']
     assert eth.verify(digest, j['subtree']) > 0
 
+    block_no, root = eth.verify_and_get_root(digest, j['subtree'])
+    assert block_no == eth.test(root)
+
     os.chdir(prevdir)
 
 
