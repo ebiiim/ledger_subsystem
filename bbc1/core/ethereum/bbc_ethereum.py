@@ -284,7 +284,7 @@ class BBcEthereum:
                 0 if not found.
         """
 
-        block_number, root = verify_and_get_root(self, digest, subtree)
+        block_number, root = self.verify_and_get_root(digest, subtree)
         return block_number
 
 
