@@ -24,17 +24,23 @@ For the example below, we assume that BBc-1 Core and the ledger subsystem are pi
 ```
 $ eth_subsystem_tool.py -w ~/.bbc1 brownie <infura.io project ID>
 ```
-2. Set up a new Ethereum account
+
+2. Set up a new Ethereum account (if you do not have one yet)
 ```
 $ eth_subsystem_tool.py -w ~/.bbc1 new_account
 ```
+If you have already got an account, and know its private key, you can set it using "account" command of eth_subsystem_tool.py.
+
 3. Load the account with ETH from the specified network
+
+For that, for ropsten, faucets like https://faucet.ropsten.be can be used. The balance can be confirmed with "balance" command of eth_subsystem_tool.py.
+
 4. Deploy BBcAnchor smart contract
 ```
 $ eth_subsystem_tool.py -w ~/.bbc1 deploy
 ```
 
-You are all set, and you can run ledger_subsystem with enabled=True argument or enable() it.
+You are all set, and you can run ledger_subsystem with enabled=True argument or enable() it. Or you may want to try "enable" command of eth_subsystem_tool.py for that.
 
 If you are sure, then you may want to try
 ```
@@ -48,5 +54,5 @@ The information is all written into the config file of BBc-1 core.
 ## Tests
 * **tests/test_bbc_ethereum1.py**
 * **tests/test_bbc_ethereum2.py**
+* **tests/test_bbc_ethereum3.py**
 * **tests/test_ledger_subsystem.py**
-

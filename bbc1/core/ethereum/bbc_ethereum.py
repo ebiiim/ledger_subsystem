@@ -39,6 +39,33 @@ def chdir_to_this_filepath():
     return prevdir
 
 
+def get_balance(bbcConfig):
+    """Gets the ETH balance of the Ethereum account in use.
+
+    Args:
+        bbcConfig (BBcConfig): The configuration object.
+        call_count (int): >0 means the project has already been loaded.
+
+    Returns:
+        balance (int): The ETH balance.
+
+    """
+
+    prevdir = chdir_to_this_filepath()
+
+    config = bbcConfig.get_config()
+
+    project.load('.')
+    network.connect(config['ethereum']['network'])
+
+    accounts.add(config['ethereum']['private_key'])
+    balance = accounts[0].balance()
+
+    os.chdir(prevdir)
+
+    return balance
+
+
 def setup_account(bbcConfig, private_key):
     """Sets the specified Ethereum account to be used in the ledger subsystem.
 

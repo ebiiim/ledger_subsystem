@@ -66,6 +66,9 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
         parser.add_argument('private_key', action='store',
                 help='Private key of the account')
 
+        # balance command
+        self.subparsers.add_parser('balance', help='Show ETH balance')
+
         # deploy command
         self.subparsers.add_parser('deploy', help='Deploy the anchor contract')
 
@@ -121,6 +124,9 @@ if __name__ == '__main__':
         bbc_ethereum.setup_account(bbcConfig, args.private_key)
         print("Deploying the anchor contract.")
         bbc_ethereum.setup_deploy(bbcConfig)
+
+    elif args.command_type == 'balance':
+        print(bbc_ethereum.get_balance(bbcConfig))
 
     elif args.command_type == 'brownie':
         bbc_ethereum.setup_brownie(args.project_id)
