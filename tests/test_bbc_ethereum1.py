@@ -33,25 +33,20 @@ def default_config():
             'ropsten' if TEST_INFURA_PROJECT_ID != '' else 'development')
 
 
-def test_setup_brownie():
+def test_setup_brownie(default_config):
 
-    bbc_ethereum.setup_brownie(TEST_INFURA_PROJECT_ID)
+    bbc_ethereum.setup_brownie(default_config, TEST_INFURA_PROJECT_ID)
 
     prevdir = os.getcwd()
-    os.chdir(bbc1.__path__[0] + '/core/ethereum')
+    os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
 
-    if os.path.exists('brownie-config.json'):
-        f = open('brownie-config.json', 'r')
-    jBrow = json.load(f)
+    f = open(TEST_CONFIG_FILE, 'r')
+    config = json.load(f)
     f.close()
 
-    jRopsten = jBrow['networks']['ropsten']
+    infura_project_id = config['ethereum']['web3_infura_project_id']
 
-    assert jRopsten['host'] == 'https://ropsten.infura.io/v3/' + TEST_INFURA_PROJECT_ID
-
-    jMainnet = jBrow['networks']['mainnet']
-
-    assert jMainnet['host'] == 'https://mainnet.infura.io/v3/' + TEST_INFURA_PROJECT_ID
+    assert infura_project_id == TEST_INFURA_PROJECT_ID
 
     os.chdir(prevdir)
     print("\n==> brownie is set up.")

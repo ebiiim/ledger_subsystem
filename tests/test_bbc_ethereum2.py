@@ -78,12 +78,19 @@ def test_setup_deploy(default_config):
     assert eth.test(0x1234) > 0
 
     print("value has been set; setting another value.")
+
+    os.chdir(prevdir)
+
+    eth = bbc_ethereum.BBcEthereum(config['ethereum']['network'],
+            config['ethereum']['private_key'], address,
+            project_dir=bbc1.__path__[0] + '/core/ethereum')
+
     eth.blockingSet(b'\x43\x21')
 
     assert eth.test(0x4321) > 0
     assert eth.test(b'\x43\x21') > 0
 
-    os.chdir(prevdir)
+
     print("==> BBcAnchor is deployed and tested.")
 
 

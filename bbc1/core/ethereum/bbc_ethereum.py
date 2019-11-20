@@ -55,6 +55,9 @@ def get_balance(bbcConfig):
 
     config = bbcConfig.get_config()
 
+    os.environ['WEB3_INFURA_PROJECT_ID'] = \
+            config['ethereum']['web3_infura_project_id']
+
     project.load('.')
     network.connect(config['ethereum']['network'])
 
@@ -82,41 +85,25 @@ def setup_account(bbcConfig, private_key):
     os.chdir(prevdir)
 
 
-def setup_brownie(infura_project_id):
+def setup_brownie(bbcConfig, infura_project_id):
     """Sets up a brownie environment for Ethereum ledger subsytem.
         Initializes the environment and compiles BBcAnchor contract.
 
     Args:
+        bbcConfig (BBcConfig): The configuration object.
         infura_project_id (str): INFURA project ID.
             To be used for setting up 'ropsten' and 'mainnet' networks.
 
     """
+    config = bbcConfig.get_config()
+    config['ethereum']['web3_infura_project_id'] = infura_project_id
+
+    prevdir = chdir_to_core_path()
+    bbcConfig.update_config()
+    os.chdir(prevdir)
+
     prevdir = chdir_to_this_filepath()
     subprocess.call(['brownie', 'init'])
-
-    if os.path.exists('brownie-config.json'):
-
-        f = open('brownie-config.json', 'r')
-        jBrow = json.load(f)
-        f.close()
-
-        jRopsten = {
-            'host': 'https://ropsten.infura.io/v3/' + infura_project_id,
-            'broadcast_reverting_tx': False,
-        }
-        jMainnet = {
-            'host': 'https://mainnet.infura.io/v3/' + infura_project_id,
-            'broadcast_reverting_tx': False,
-        }
-    
-        jNetworks = jBrow['networks']
-        jNetworks['ropsten'] = jRopsten
-        jNetworks['mainnet'] = jMainnet
-
-        f = open('brownie-config.json', 'w')
-        json.dump(jBrow, f, indent=2)
-        f.close()
-
     subprocess.call(['brownie', 'compile'])
     os.chdir(prevdir)
 
@@ -144,6 +131,7 @@ def setup_config(working_dir, file_name, network_name):
             'network': network_name,
             'private_key': '',
             'contract_address': '',
+            'web3_infura_project_id': '',
         }
         isUpdated = True
 
@@ -170,6 +158,9 @@ def setup_deploy(bbcConfig):
     prevdir = chdir_to_this_filepath()
 
     config = bbcConfig.get_config()
+    os.environ['WEB3_INFURA_PROJECT_ID'] = \
+            config['ethereum']['web3_infura_project_id']
+
     bbcEthereum = BBcEthereum(config['ethereum']['network'],
             private_key=config['ethereum']['private_key'])
 
@@ -195,6 +186,8 @@ def setup_new_account(bbcConfig):
     prevdir = chdir_to_this_filepath()
 
     config = bbcConfig.get_config()
+    os.environ['WEB3_INFURA_PROJECT_ID'] = \
+            config['ethereum']['web3_infura_project_id']
 
     project.load('.')
     network.connect(config['ethereum']['network'])
@@ -223,7 +216,8 @@ class BBcEthereum:
 
     call_count = 0
 
-    def __init__(self, network_name, private_key=None, contract_address=None):
+    def __init__(self, network_name, private_key=None, contract_address=None,
+            project_dir=None):
         """Initializes the object.
 
         Args:
@@ -236,7 +230,7 @@ class BBcEthereum:
         """
 
         if BBcEthereum.call_count <= 0:
-            project.load('.')
+            project.load('.' if project_dir is None else project_dir)
             network.connect(network_name)
             if private_key is not None:
                 accounts.add(private_key)
@@ -244,12 +238,12 @@ class BBcEthereum:
         BBcEthereum.call_count += 1
 
         if contract_address is None:
-            accounts[0].deploy(project.BBcAnchor)
+            accounts[0].deploy(project.EthereumProject.BBcAnchor)
         else:
-            project.BBcAnchor.at(contract_address)
+            project.EthereumProject.BBcAnchor.at(contract_address)
 
         self.account = None if len(accounts) <= 0 else accounts[0]
-        self.anchor = project.BBcAnchor[0]
+        self.anchor = project.EthereumProject.BBcAnchor[0]
 
 
     def blockingSet(self, digest):
