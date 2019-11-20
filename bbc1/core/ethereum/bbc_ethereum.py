@@ -205,7 +205,7 @@ def setup_test():
     """
 
     prevdir = chdir_to_this_filepath()
-    subprocess.call(['brownie', 'test'])
+    subprocess.call(['pytest', 'tests'])
     os.chdir(prevdir)
 
 
