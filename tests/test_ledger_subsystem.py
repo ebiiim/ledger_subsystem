@@ -11,14 +11,24 @@ import time
 import sys
 sys.path.extend(["../"])
 import bbc1
+
+TEST_CONFIG_FILE = 'test_config.json'
+
 from bbc1.core import bbclib
 from bbc1.core import ledger_subsystem, bbc_stats, bbc_network, bbc_config
 from bbc1.core.ethereum import bbc_ethereum
-from tests import test_bbc_ethereum1
 
 
 domain_id1 = bbclib.get_new_id("test_domain1")
 domain_id2 = bbclib.get_new_id("test_domain2")
+
+
+class Args:
+
+    def __init__(self):
+
+        self.workingdir = bbc_config.DEFAULT_WORKING_DIR
+        self.config = TEST_CONFIG_FILE
 
 
 class DummyCore:
@@ -37,7 +47,7 @@ class DummyCore:
 @pytest.fixture()
 def default_config():
 
-    args = test_bbc_ethereum1.Args()
+    args = Args()
     config = bbc_ethereum.setup_config(args.workingdir, args.config,
             'development')
     conf = config.get_config()

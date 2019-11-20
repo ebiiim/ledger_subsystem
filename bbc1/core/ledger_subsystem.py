@@ -187,6 +187,8 @@ class LedgerSubsystem:
             if not os.path.exists('ethereum/contracts/BBcAnchor.sol'):
                 os.chdir(os.path.dirname(os.path.realpath(__file__)))
             os.chdir('ethereum')
+            os.environ['WEB3_INFURA_PROJECT_ID'] = \
+                    self.eth_config['web3_infura_project_id']
             try:
                 self.eth = bbc_ethereum.BBcEthereum(
                     self.eth_config['network'],

@@ -98,6 +98,8 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
 
         prevdir = os.getcwd()
         os.chdir(bbc1.__path__[0] + '/core/ethereum')
+        os.environ['WEB3_INFURA_PROJECT_ID'] = \
+                config['ethereum']['web3_infura_project_id']
 
         eth = bbc_ethereum.BBcEthereum(
             config['ethereum']['network'],
@@ -119,7 +121,7 @@ if __name__ == '__main__':
 
     if args.command_type == 'auto':
         print("Setting up brownie.")
-        bbc_ethereum.setup_brownie(args.project_id)
+        bbc_ethereum.setup_brownie(bbcConfig, args.project_id)
         print("Setting up an Ethereum account.")
         bbc_ethereum.setup_account(bbcConfig, args.private_key)
         print("Deploying the anchor contract.")
@@ -129,7 +131,7 @@ if __name__ == '__main__':
         print(bbc_ethereum.get_balance(bbcConfig))
 
     elif args.command_type == 'brownie':
-        bbc_ethereum.setup_brownie(args.project_id)
+        bbc_ethereum.setup_brownie(bbcConfig, args.project_id)
 
     elif args.command_type == 'test':
         bbc_ethereum.setup_test()
