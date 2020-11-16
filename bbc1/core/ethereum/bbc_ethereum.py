@@ -175,6 +175,30 @@ def setup_deploy(bbcConfig):
     os.chdir(prevdir)
 
 
+def setup_deployed(bbcConfig, new_contract_address):
+    """Use deployed BBcAnchor contract at Ethereum ledger subsystem.
+
+    Args:
+        bbcConfig (BBcConfig): The configuration object.
+        new_contract_address (str): The contract address to use.
+
+    """
+
+    prevdir = chdir_to_this_filepath()
+
+    config = bbcConfig.get_config()
+
+    contract_address = config['ethereum']['contract_address']
+    if contract_address != '':
+        config['ethereum']['previous_contract_address'] = contract_address
+
+    config['ethereum']['contract_address'] = new_contract_address
+
+    os.chdir('..')
+    bbcConfig.update_config()
+    os.chdir(prevdir)
+
+
 def setup_new_account(bbcConfig):
     """Creates a new Ethereum account to be used in the ledger subsystem.
 
@@ -239,11 +263,12 @@ class BBcEthereum:
 
         if contract_address is None:
             accounts[0].deploy(project.EthereumProject.BBcAnchor)
+            self.anchor = project.EthereumProject.BBcAnchor[0]
         else:
-            project.EthereumProject.BBcAnchor.at(contract_address)
+            self.anchor = project.EthereumProject.BBcAnchor.at(
+                    contract_address)
 
         self.account = None if len(accounts) <= 0 else accounts[0]
-        self.anchor = project.EthereumProject.BBcAnchor[0]
 
 
     def blockingSet(self, digest):

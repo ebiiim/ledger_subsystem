@@ -72,6 +72,12 @@ class EthereumSubsystemTool(subsystem_tool_lib.SubsystemTool):
         # deploy command
         self.subparsers.add_parser('deploy', help='Deploy the anchor contract')
 
+        # deployed command
+        parser = self.subparsers.add_parser('deployed',
+                help='Use existing anchor contract')
+        parser.add_argument('contract_address', action='store',
+                help='Anchor contract address')
+
         # new_account command
         parser = self.subparsers.add_parser('new_account',
                 help='Create a new Ethereum account')
@@ -148,6 +154,9 @@ if __name__ == '__main__':
 
     elif args.command_type == 'deploy':
         bbc_ethereum.setup_deploy(bbcConfig)
+
+    elif args.command_type == 'deployed':
+        bbc_ethereum.setup_deployed(bbcConfig, args.contract_address)
 
     sys.exit(0)
 

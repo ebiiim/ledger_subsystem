@@ -16,6 +16,8 @@ TEST_CONFIG_FILE = 'test_config.json'
 from test_bbc_ethereum_const import TEST_PRIVATE_KEY
 from test_bbc_ethereum_const import TEST_INFURA_PROJECT_ID
 
+TEST_CONTRACT_ADDRESS = '0x31e12b7b5214248184DaBa8071605CE3E92AcDa3'
+
 
 class Args:
 
@@ -92,6 +94,22 @@ def test_setup_deploy(default_config):
 
 
     print("==> BBcAnchor is deployed and tested.")
+
+
+def test_setup_deployed(default_config):
+
+    bbc_ethereum.setup_deployed(default_config, TEST_CONTRACT_ADDRESS)
+
+    prevdir = os.getcwd()
+    os.chdir(bbc1.__path__[0] + '/core/' + bbc_config.DEFAULT_WORKING_DIR)
+
+    f = open(TEST_CONFIG_FILE, 'r')
+    config = json.load(f)
+    f.close()
+
+    assert config['ethereum']['contract_address'] == TEST_CONTRACT_ADDRESS
+
+    print("==> deployed BBcAnchor can be set.")
 
 
 # end of tests/test_bbc_ethereum2.py
