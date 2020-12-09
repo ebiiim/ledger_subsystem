@@ -263,7 +263,10 @@ class BBcEthereum:
 
         if contract_address is None:
             accounts[0].deploy(project.EthereumProject.BBcAnchor)
-            self.anchor = project.EthereumProject.BBcAnchor[0]
+            self.anchor = project.EthereumProject.BBcAnchor[
+                len(project.EthereumProject.BBcAnchor) - 1
+            ]
+
         else:
             self.anchor = project.EthereumProject.BBcAnchor.at(
                     contract_address)
