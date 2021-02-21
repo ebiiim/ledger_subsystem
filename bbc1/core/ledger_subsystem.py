@@ -274,7 +274,6 @@ class LedgerSubsystem:
                     self.logger.debug("got message: %s %s" % (msg[0], msg[1]))
                     self.verify_digest(msg[1], msg[3])
                     msg[2].set()
-
             else:
                 self.logger.debug("got message: %s" % msg)
                 digest = None
@@ -379,7 +378,6 @@ class LedgerSubsystem:
             spec = {
                 'subsystem': specList[0],
                 'chain': specList[1],
-                'via': specList[2],
                 'transaction': txid,
                 'root': digest,
             }
@@ -451,10 +449,10 @@ class LedgerSubsystem:
             )
             self.eth.blockingSet(root)
         if self.config['ledger_subsystem']['subsystem'] == 'bitcoin':
-            server = (self.btc_config['btcgw_server'].split("://")[-1])
+            chain = "Testnet3" # TODO: get the chain
             self.write_root(
                 root=root,
-                spec=f"bitcoin:testnet3:{server}" # TODO
+                spec=f"bitcoin:{chain}"
             )
             ok, errmsg = self.btc.register(root)
             if not ok:
