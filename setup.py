@@ -16,10 +16,16 @@ class MyInstall(install):
         sitedir = site.getsitepackages()[0]
         install_pkg_dir = os.path.join(sitedir, 'bbc1')
         target_dir = os.path.join(install_pkg_dir, 'core')
+
         ethereum_target_dir = os.path.join(target_dir, 'ethereum')
         if os.path.exists(ethereum_target_dir):
             shutil.rmtree(ethereum_target_dir)
         shutil.copytree('bbc1/core/ethereum', ethereum_target_dir)
+
+        bitcoin_target_dir = os.path.join(target_dir, 'bitcoin')
+        if os.path.exists(bitcoin_target_dir):
+            shutil.rmtree(bitcoin_target_dir)
+        shutil.copytree('bbc1/core/bitcoin', bitcoin_target_dir)
 
     def run(self):
         try:
@@ -34,10 +40,15 @@ bbc1_requires = [
                     'eth-brownie>=1.1.0',
                 ]
 
-bbc1_packages = ['bbc1', 'bbc1.core', 'bbc1.core.ethereum']
+bbc1_packages = [
+                    'bbc1', 'bbc1.core',
+                    'bbc1.core.ethereum',
+                    'bbc1.core.bitcoin',
+                ]
 
 bbc1_commands = [
                     'utils/eth_subsystem_tool.py',
+                    'utils/btc_subsystem_tool.py',
                 ]
 
 bbc1_classifiers = [
