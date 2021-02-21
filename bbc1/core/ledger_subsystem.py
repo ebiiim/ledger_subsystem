@@ -449,7 +449,7 @@ class LedgerSubsystem:
             )
             self.eth.blockingSet(root)
         if self.config['ledger_subsystem']['subsystem'] == 'bitcoin':
-            chain = "Testnet3" # TODO: get the chain
+            chain = self.config['ledger_subsystem']['subsystem']['bitcoin']['chain']
             self.write_root(
                 root=root,
                 spec=f"bitcoin:{chain}"

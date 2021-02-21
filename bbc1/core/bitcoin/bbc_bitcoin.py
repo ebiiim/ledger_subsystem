@@ -1,11 +1,70 @@
 # -*- coding: utf-8 -*-
 
+import os
 from typing import Tuple
 import requests
 
 import sys
 sys.path.extend(["../../../"])
 from bbc1.core import bbc_config
+
+def chdir_to_core_path():
+    prevdir = chdir_to_this_filepath()
+    os.chdir('..')
+    return prevdir
+
+
+def chdir_to_this_filepath():
+    prevdir = os.getcwd()
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    return prevdir
+
+
+def setup_config(working_dir, file_name):
+    """Sets Bitcoin btcgw configuration.
+
+    Args:
+        working_dir (str): The working directory of BBc-1 core.
+        file_name (str): The file name of BBc-1 core configuration file.
+
+    """
+
+    prevdir = chdir_to_core_path()
+
+    bbcConfig = bbc_config.BBcConfig(working_dir,
+            os.path.join(working_dir, file_name))
+    config = bbcConfig.get_config()
+
+    if not 'bitcoin' in config:
+        config['bitcoin'] = {
+            'chain': '',
+            "btcgw_server": '',
+            "btcgw_api_key": '',
+        }
+        bbcConfig.update_config()
+
+    os.chdir(prevdir)
+
+    return bbcConfig
+
+
+def setup_btcgw(bbcConfig, server: str, apikey: str):
+    """Sets up a btcgw environment for Bitcoin ledger subsytem.
+
+    Args:
+        bbcConfig: The configuration object.
+        server: btcgw API Server. (e.g. https://api.btcgw.example.com)
+        apikey: btcgw API Key.
+
+    """
+    config = bbcConfig.get_config()
+    config['bitcoin']['btcgw_server'] = server
+    config['bitcoin']['btcgw_api_key'] = apikey
+
+    # TODO: get network from the server
+    chain = "Testnet3"
+    config['bitcoin']['chain'] = chain
+    bbcConfig.update_config()
 
 
 class BBcBitcoin:
