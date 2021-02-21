@@ -7,6 +7,7 @@ include README.md
 include prepare.py
 include *.rst
 recursive-include bbc1/core/ethereum *
+recursive-include bbc1/core/bitcoin *
 recursive-include utils *
 graft django
 prune django/contrib/admin/bin
