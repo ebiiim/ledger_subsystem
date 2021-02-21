@@ -25,7 +25,7 @@ import sys
 sys.path.extend(["../../"])
 from bbc1.core import logger
 from bbc1.core.ethereum import bbc_ethereum
-
+from bbc1.core.bitcoin import bbc_bitcoin
 
 DEFAULT_SUBSYSTEM = 'ethereum'
 DEFAULT_CAPACITY = 4096
@@ -100,13 +100,18 @@ class LedgerSubsystem:
         self.queue = Queue()
         self.enabled = enabled
         self.config = config.get_domain_config(self.domain_id)
+
         if 'ethereum' in self.config:
             self.eth_config = self.config['ethereum']
+        if 'bitcoin' in self.config:
+            self.btc_config = self.config['bitcoin']
         else:
             conf = config.get_config()
             self.eth_config = \
                     None if 'ethereum' not in conf else conf['ethereum']
         self.eth = None
+        self.btc = None
+
         if 'ledger_subsystem' not in self.config:
             self.config['ledger_subsystem'] = {
                 'subsystem': DEFAULT_SUBSYSTEM,
@@ -173,8 +178,7 @@ class LedgerSubsystem:
             lBase = lTop
             if count <= 2:
                 break
-        if self.config['ledger_subsystem']['subsystem'] == 'ethereum':
-            self.write_merkle_root(lBase[0])
+        self.write_merkle_root(lBase[0])
 
 
     def enable(self):
@@ -199,8 +203,12 @@ class LedgerSubsystem:
                 os.chdir(prevdir)
                 raise
             os.chdir(prevdir)
+        elif self.config['ledger_subsystem']['subsystem'] == 'bitcoin':
+            btcgw_apikey = self.btc_config['btcgw_api_key']
+            btcgw_server = self.btc_config['btcgw_server']
+            self.btc = bbc_bitcoin.BBcBitcoin(self.domain_id, btcgw_server, btcgw_apikey)
         else:
-            self.logger.error("Currently, Ethereum only is supported.")
+            self.logger.error("Currently, only Ethereum and Bitcoin is supported.")
             os.exit(1)
         self.timer = threading.Timer(self.interval, self.subsystem_timer)
         self.timer.start()
@@ -266,6 +274,7 @@ class LedgerSubsystem:
                     self.logger.debug("got message: %s %s" % (msg[0], msg[1]))
                     self.verify_digest(msg[1], msg[3])
                     msg[2].set()
+
             else:
                 self.logger.debug("got message: %s" % msg)
                 digest = None
@@ -345,21 +354,38 @@ class LedgerSubsystem:
             dic['result'] = False
             return
         specList = row[0][1].split(':')
-        block = self.eth.test(digest)
-        if block <= 0:
-            self.logger.warning("merkle root not anchored")
-            dic['result'] = False
-            return
-        spec = {
-            'subsystem': specList[0],
-            'network': specList[1],
-            'contract': specList[2],
-            'contract_address': specList[3],
-            'block': block,
-        }
-        dic['result'] = True
-        dic['spec'] = spec
-        dic['subtree'] = subtree
+        if self.config['ledger_subsystem']['subsystem'] == 'ethereum':
+            block = self.eth.test(digest)
+            if block <= 0:
+                self.logger.warning("merkle root not anchored")
+                dic['result'] = False
+                return
+            spec = {
+                'subsystem': specList[0],
+                'network': specList[1],
+                'contract': specList[2],
+                'contract_address': specList[3],
+                'block': block,
+            }
+            dic['result'] = True
+            dic['spec'] = spec
+            dic['subtree'] = subtree
+        if self.config['ledger_subsystem']['subsystem'] == 'bitcoin':
+            ok, errmsg, txid = self.btc.verify(digest)
+            if not ok:
+                self.logger.warning(f"Bitcoin::could_not_verify::{errmsg}")
+            if errmsg != "":
+                self.logger.debug(f"Bitcoin::verified::with_optional_msg({errmsg})::{digest.hex()}::in_btc::{txid}")
+            spec = {
+                'subsystem': specList[0],
+                'chain': specList[1],
+                'via': specList[2],
+                'transaction': txid,
+                'root': digest,
+            }
+            dic['result'] = ok
+            dic['spec'] = spec
+            dic['subtree'] = subtree
 
 
     def write_branch(self, digest=None, left=None, right=None):
@@ -416,13 +442,24 @@ class LedgerSubsystem:
 
 
     def write_merkle_root(self, root):
-        self.write_root(
-            root=root,
-            spec='ethereum:%s:BBcAnchor:%s' %
-                 (self.eth_config['network'],
-                  self.eth_config['contract_address'])
-        )
-        self.eth.blockingSet(root)
+        if self.config['ledger_subsystem']['subsystem'] == 'ethereum':
+            self.write_root(
+                root=root,
+                spec='ethereum:%s:BBcAnchor:%s' %
+                    (self.eth_config['network'],
+                    self.eth_config['contract_address'])
+            )
+            self.eth.blockingSet(root)
+        if self.config['ledger_subsystem']['subsystem'] == 'bitcoin':
+            server = (self.btc_config['btcgw_server'].split("://")[-1])
+            self.write_root(
+                root=root,
+                spec=f"bitcoin:testnet3:{server}" # TODO
+            )
+            ok, errmsg = self.btc.register(root)
+            if not ok:
+                self.logger.warning(f"Bitcoin::could_not_register::{errmsg}")
+                return
 
 
     def write_root(self, root=None, spec=None):
