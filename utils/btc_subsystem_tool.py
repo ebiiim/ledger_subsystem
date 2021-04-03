@@ -31,6 +31,9 @@ class BitcoinSubsystemTool(subsystem_tool_lib.SubsystemTool):
                 help='btcgw server name (e.g. https://api.btcgw.example.com)')
         parser.add_argument('apikey', action='store',
                 help='btcgw API Key')
+        parser.add_argument('domain', action='store',
+                help='BBc-1 Domain')
+
 
     def _verify_by_subsystem(self, args, digest, spec, subtree):
         if spec[b'subsystem'] != b'bitcoin':
@@ -46,7 +49,7 @@ if __name__ == '__main__':
     bbcConfig = bbc_bitcoin.setup_config(args.workingdir, args.config)
 
     if args.command_type == 'btcgw':
-        bbc_bitcoin.setup_btcgw(bbcConfig, args.server, args.apikey)
+        bbc_bitcoin.setup_btcgw(bbcConfig, args.server, args.apikey, args.domain)
 
     sys.exit(0)
 

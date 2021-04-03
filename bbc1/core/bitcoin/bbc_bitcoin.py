@@ -7,6 +7,7 @@ import requests
 import sys
 sys.path.extend(["../../../"])
 from bbc1.core import bbc_config
+import bbclib
 
 def chdir_to_core_path():
     prevdir = chdir_to_this_filepath()
@@ -48,20 +49,22 @@ def setup_config(working_dir, file_name):
     return bbcConfig
 
 
-def setup_btcgw(bbcConfig, server: str, apikey: str):
+def setup_btcgw(bbcConfig, server: str, apikey: str, domain: str):
     """Sets up a btcgw environment for Bitcoin ledger subsytem.
 
     Args:
         bbcConfig: The configuration object.
         server: btcgw API Server. (e.g. https://api.btcgw.example.com)
         apikey: btcgw API Key.
+        domain: BBc-1 Domain ID.
 
     """
-    config = bbcConfig.get_config()
+    config = bbcConfig.get_domain_config(bbclib.convert_idstring_to_bytes(domain))
+    config['bitcoin'] = {}
     config['bitcoin']['btcgw_server'] = server
     config['bitcoin']['btcgw_api_key'] = apikey
 
-    # TODO: get network from the server
+    # TODO: get chain from API server
     chain = "Testnet3"
     config['bitcoin']['chain'] = chain
     bbcConfig.update_config()
